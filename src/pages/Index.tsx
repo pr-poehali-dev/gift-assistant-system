@@ -23,7 +23,7 @@ export default function Index() {
             <a href="#catalog" className="text-muted-foreground hover:text-primary transition-colors">Каталог</a>
             <a href="#how" className="text-muted-foreground hover:text-primary transition-colors">Как работает</a>
             <a href="#faq" className="text-muted-foreground hover:text-primary transition-colors">FAQ</a>
-            <Button className="gradient-purple-pink border-0">Войти</Button>
+            <Button className="gradient-purple-pink border-0" onClick={() => window.location.href = "/dashboard"}>Войти</Button>
           </nav>
           
           <button className="md:hidden">
@@ -50,7 +50,7 @@ export default function Index() {
                 Выбор подарка и доставка — за 7 дней до события.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" className="gradient-purple-pink border-0 text-lg px-8 hover-scale">
+                <Button size="lg" className="gradient-purple-pink border-0 text-lg px-8 hover-scale" onClick={() => window.location.href = "/dashboard"}>
                   Начать бесплатно
                   <Icon name="ArrowRight" size={20} className="ml-2" />
                 </Button>
