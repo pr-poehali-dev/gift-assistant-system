@@ -55,6 +55,9 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState<"economy" | "premium">("premium");
+  const [showTestEmailDialog, setShowTestEmailDialog] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -68,6 +71,43 @@ export default function Dashboard() {
 
   const handlePayment = () => {
     setShowPaymentDialog(true);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail) return;
+    
+    setEmailSending(true);
+    
+    const upcomingEvent = events.find(e => e.status === "upcoming") || events[0];
+    
+    try {
+      const response = await fetch("https://functions.poehali.dev/0f1ac36c-6386-4222-ac24-68f86a4d74b4", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          recipient_email: testEmail,
+          event_title: upcomingEvent.title,
+          event_date: format(upcomingEvent.date, "d MMMM yyyy", { locale: ru }),
+          recipient_name: upcomingEvent.recipient
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert("✅ Тестовое письмо отправлено! Проверьте почту.");
+        setShowTestEmailDialog(false);
+        setTestEmail("");
+      } else {
+        alert(`❌ Ошибка: ${data.error || "Не удалось отправить письмо"}`);
+      }
+    } catch (error) {
+      alert("❌ Ошибка сети. Проверьте соединение.");
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   return (
@@ -393,6 +433,28 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <Card className="border-2">
                   <CardHeader>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>Email-уведомления</span>
+                      <Icon name="Mail" className="text-primary" size={20} />
+                    </CardTitle>
+                    <CardDescription>Получайте напоминания на почту</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Мы будем отправлять вам красивые письма-напоминания за 7 дней до каждого события.
+                    </p>
+                    <Button 
+                      className="w-full gradient-purple-pink border-0" 
+                      onClick={() => setShowTestEmailDialog(true)}
+                    >
+                      <Icon name="Send" size={16} className="mr-2" />
+                      Отправить тестовое письмо
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2">
+                  <CardHeader>
                     <CardTitle className="text-lg">Добавить дополнительные даты</CardTitle>
                     <CardDescription>Расширьте свою подписку</CardDescription>
                   </CardHeader>
@@ -508,6 +570,76 @@ export default function Dashboard() {
               <p>
                 После оплаты QR-кода дополнительная дата автоматически добавится в ваш аккаунт в течение 1-2 минут
               </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTestEmailDialog} onOpenChange={setShowTestEmailDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Mail" className="text-primary" size={24} />
+              Отправить тестовое письмо
+            </DialogTitle>
+            <DialogDescription>
+              Укажите email, на который хотите получить пример напоминания
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="test-email">Email адрес</Label>
+              <Input
+                id="test-email"
+                type="email"
+                placeholder="example@mail.com"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+              />
+            </div>
+            
+            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+              <div className="flex items-start gap-2">
+                <Icon name="Info" size={16} className="flex-shrink-0 mt-0.5 text-blue-600" />
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground mb-1">Что придет на почту:</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Красивое HTML-письмо с градиентами</li>
+                    <li>Детали события из вашего календаря</li>
+                    <li>Ссылка в личный кабинет</li>
+                    <li>Информация о доставке подарка</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Button 
+                className="w-full gradient-purple-pink border-0" 
+                size="lg"
+                onClick={handleSendTestEmail}
+                disabled={!testEmail || emailSending}
+              >
+                {emailSending ? (
+                  <>
+                    <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
+                    Отправка...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Send" size={20} className="mr-2" />
+                    Отправить письмо
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => setShowTestEmailDialog(false)}
+                disabled={emailSending}
+              >
+                Отмена
+              </Button>
             </div>
           </div>
         </DialogContent>
